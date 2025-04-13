@@ -23,6 +23,32 @@ let lastTime = 0;
 let currentSong = null;
 let audioContext = null;
 let judgmentTexts = []; // Array to store judgment text animations
+let currentDifficulty = 'easy'; // Default difficulty
+
+// Difficulty settings
+const difficulties = {
+    easy: {
+        noteSpeed: 4,
+        noteFrequency: 1.0, // Multiplier for note frequency
+        perfectRange: 20,
+        goodRange: 35,
+        okayRange: 50
+    },
+    medium: {
+        noteSpeed: 5,
+        noteFrequency: 1.5,
+        perfectRange: 15,
+        goodRange: 30,
+        okayRange: 45
+    },
+    hard: {
+        noteSpeed: 6.5,
+        noteFrequency: 2.0,
+        perfectRange: 10,
+        goodRange: 25,
+        okayRange: 40
+    }
+};
 
 // Lanes and keys
 const lanes = [
@@ -54,8 +80,57 @@ function init() {
     document.getElementById('restartButton').addEventListener('click', restartGame);
     document.getElementById('muteButton').addEventListener('click', toggleMute);
     
+    // Set up difficulty selection on main menu
+    document.getElementById('easyButton').addEventListener('click', () => setDifficulty('easy'));
+    document.getElementById('mediumButton').addEventListener('click', () => setDifficulty('medium'));
+    document.getElementById('hardButton').addEventListener('click', () => setDifficulty('hard'));
+    
+    // Set up difficulty selection on game over screen
+    document.getElementById('easyButtonGameOver').addEventListener('click', () => setDifficultyGameOver('easy'));
+    document.getElementById('mediumButtonGameOver').addEventListener('click', () => setDifficultyGameOver('medium'));
+    document.getElementById('hardButtonGameOver').addEventListener('click', () => setDifficultyGameOver('hard'));
+    
     // Draw the initial screen
     drawGame();
+}
+
+// Set the game difficulty from main menu
+function setDifficulty(difficulty) {
+    // Update selected button UI
+    document.querySelectorAll('#menu .difficulty-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    document.getElementById(`${difficulty}Button`).classList.add('selected');
+    
+    // Set the difficulty
+    currentDifficulty = difficulty;
+    
+    // Play click sound
+    audioManager.playSound('click');
+}
+
+// Set the game difficulty from game over screen
+function setDifficultyGameOver(difficulty) {
+    // Update selected button UI on game over screen
+    document.querySelectorAll('#gameOver .difficulty-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    document.getElementById(`${difficulty}ButtonGameOver`).classList.add('selected');
+    
+    // Update selected button UI on main menu to keep them in sync
+    document.querySelectorAll('#menu .difficulty-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    document.getElementById(`${difficulty}Button`).classList.add('selected');
+    
+    // Set the difficulty
+    currentDifficulty = difficulty;
+    
+    // Update the difficulty text
+    document.getElementById('finalDifficulty').textContent = `Difficulty: ${currentDifficulty.charAt(0).toUpperCase() + currentDifficulty.slice(1)}`;
+    
+    // Play click sound
+    audioManager.playSound('click');
 }
 
 // Toggle mute function
@@ -114,7 +189,7 @@ function resetGame() {
 function loadDemoSong() {
     // This would be replaced with actual song data loaded from a file
     // For now, we'll create a simple pattern
-    const demoPattern = [
+    const basePattern = [
         { lane: 0, time: 1000 },
         { lane: 1, time: 1500 },
         { lane: 2, time: 2000 },
@@ -157,12 +232,52 @@ function loadDemoSong() {
         { lane: 3, time: 14500 },
     ];
     
+    // Adjust pattern based on difficulty
+    let demoPattern = [];
+    const diffSettings = difficulties[currentDifficulty];
+    
+    if (currentDifficulty === 'easy') {
+        // For easy, use a subset of the pattern
+        demoPattern = basePattern.filter((_, index) => index % 2 === 0);
+    } else if (currentDifficulty === 'medium') {
+        // For medium, use the full pattern
+        demoPattern = basePattern;
+    } else if (currentDifficulty === 'hard') {
+        // For hard, use the full pattern and add some additional notes
+        demoPattern = [...basePattern];
+        
+        // Add some additional notes for hard difficulty
+        const additionalNotes = [
+            { lane: 2, time: 1250 },
+            { lane: 3, time: 1750 },
+            { lane: 0, time: 2250 },
+            { lane: 1, time: 2750 },
+            { lane: 2, time: 3250 },
+            { lane: 3, time: 3750 },
+            { lane: 0, time: 4250 },
+            { lane: 1, time: 4750 },
+            { lane: 0, time: 5125 },
+            { lane: 3, time: 5375 },
+            { lane: 0, time: 5625 },
+            { lane: 3, time: 5875 },
+            { lane: 1, time: 6125 },
+            { lane: 2, time: 6375 },
+            { lane: 1, time: 6625 },
+            { lane: 2, time: 6875 }
+        ];
+        
+        demoPattern = [...demoPattern, ...additionalNotes];
+        
+        // Sort by time
+        demoPattern.sort((a, b) => a.time - b.time);
+    }
+    
     totalNotes = demoPattern.length;
     
     // Convert the pattern to notes
     demoPattern.forEach(note => {
         lanes[note.lane].notes.push({
-            y: CANVAS_HEIGHT + NOTE_HEIGHT + (note.time / 1000 * 60 * NOTE_SPEED), // Changed to start from bottom
+            y: CANVAS_HEIGHT + NOTE_HEIGHT + (note.time / 1000 * 60 * diffSettings.noteSpeed), // Changed to start from bottom
             hit: false,
             missed: false,
             time: note.time
@@ -197,13 +312,15 @@ function gameLoop(timestamp) {
 
 // Update game state
 function update(deltaTime) {
+    const diffSettings = difficulties[currentDifficulty];
+    
     // Move notes
     lanes.forEach(lane => {
         lane.notes.forEach(note => {
-            note.y -= NOTE_SPEED; // Changed from += to -= to move upward
+            note.y -= diffSettings.noteSpeed; // Changed from += to -= to move upward
             
             // Check for missed notes
-            if (!note.hit && !note.missed && note.y < TARGET_Y - TARGET_HEIGHT - OKAY_RANGE) { // Changed from > to <
+            if (!note.hit && !note.missed && note.y < TARGET_Y - TARGET_HEIGHT - diffSettings.okayRange) { // Changed from > to <
                 note.missed = true;
                 missNote();
             }
@@ -238,6 +355,17 @@ function drawGame() {
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     
+    // Draw staff lines (for musical appearance)
+    ctx.strokeStyle = '#333333';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 5; i++) {
+        const y = 150 + i * 30;
+        ctx.beginPath();
+        ctx.moveTo(150, y);
+        ctx.lineTo(650, y);
+        ctx.stroke();
+    }
+    
     // Draw lanes
     lanes.forEach(lane => {
         // Draw lane
@@ -267,11 +395,26 @@ function drawGame() {
         ctx.fillStyle = lane.active ? lane.color : '#555555';
         ctx.fillRect(lane.x - LANE_WIDTH / 2, TARGET_Y, LANE_WIDTH, TARGET_HEIGHT);
         
-        // Draw notes
+        // Draw notes as musical notes
         lane.notes.forEach(note => {
             if (!note.hit && !note.missed) {
+                // Draw note body
                 ctx.fillStyle = lane.color;
-                ctx.fillRect(lane.x - LANE_WIDTH / 2 + 10, note.y, LANE_WIDTH - 20, NOTE_HEIGHT);
+                
+                // Draw note head (circle)
+                ctx.beginPath();
+                ctx.ellipse(lane.x, note.y + NOTE_HEIGHT/2, 12, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw note stem
+                ctx.fillRect(lane.x + 8, note.y - 20, 2, 30);
+                
+                // Draw note flag
+                ctx.beginPath();
+                ctx.moveTo(lane.x + 10, note.y - 20);
+                ctx.quadraticCurveTo(lane.x + 20, note.y - 15, lane.x + 20, note.y - 5);
+                ctx.lineTo(lane.x + 10, note.y - 10);
+                ctx.fill();
             }
         });
     });
@@ -332,6 +475,7 @@ function handleKeyUp(event) {
 function checkHit(lane) {
     // Find the closest unhit note in the lane
     const note = lane.notes.find(note => !note.hit && !note.missed);
+    const diffSettings = difficulties[currentDifficulty];
     
     if (!note) return;
     
@@ -340,13 +484,13 @@ function checkHit(lane) {
     
     // Determine judgment based on distance
     let judgment;
-    if (distance <= PERFECT_RANGE) {
+    if (distance <= diffSettings.perfectRange) {
         judgment = judgments.PERFECT;
         audioManager.playSound('perfect');
-    } else if (distance <= GOOD_RANGE) {
+    } else if (distance <= diffSettings.goodRange) {
         judgment = judgments.GOOD;
         audioManager.playSound('good');
-    } else if (distance <= OKAY_RANGE) {
+    } else if (distance <= diffSettings.okayRange) {
         judgment = judgments.OKAY;
         audioManager.playSound('okay');
     } else {
@@ -428,6 +572,13 @@ function endGame() {
     // Update final score display
     document.getElementById('finalScore').textContent = `Score: ${Math.floor(score)}`;
     document.getElementById('finalAccuracy').textContent = `Accuracy: ${((hits / totalNotes) * 100).toFixed(2)}%`;
+    document.getElementById('finalDifficulty').textContent = `Difficulty: ${currentDifficulty.charAt(0).toUpperCase() + currentDifficulty.slice(1)}`;
+    
+    // Sync difficulty buttons on game over screen with current difficulty
+    document.querySelectorAll('#gameOver .difficulty-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    document.getElementById(`${currentDifficulty}ButtonGameOver`).classList.add('selected');
     
     // Show game over screen
     document.getElementById('gameOver').classList.remove('hidden');

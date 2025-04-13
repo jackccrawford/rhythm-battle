@@ -104,6 +104,44 @@ h1 {
     text-shadow: 0 0 10px #ff3366;
 }
 
+h2 {
+    font-size: 24px;
+    margin-bottom: 15px;
+    color: #fff;
+}
+
+.difficulty-selector {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.difficulty-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.difficulty-btn {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.difficulty-btn:hover {
+    background-color: #555;
+}
+
+.difficulty-btn.selected {
+    background-color: #ff3366;
+    transform: scale(1.05);
+}
+
 button {
     background-color: #ff3366;
     color: white;
@@ -178,7 +216,48 @@ button:hover {
     z-index: 5;
 }
 
+/* Musical note styles */
+.note {
+    position: absolute;
+    width: 80px;
+    height: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.note-head {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    right: 0;
+}
+
+.note-stem {
+    position: absolute;
+    width: 2px;
+    height: 40px;
+    right: 10px;
+    bottom: 0;
+}
+
+.note-flag {
+    position: absolute;
+    width: 10px;
+    height: 15px;
+    right: 2px;
+    top: -15px;
+    border-radius: 50% 0 0 0;
+    transform: rotate(-10deg);
+}
+
 @keyframes fadeOut {
     0% { opacity: 1; transform: scale(1); }
     100% { opacity: 0; transform: scale(1.5); }
+}
+
+#finalDifficulty {
+    margin: 10px 0;
+    font-size: 20px;
+    font-weight: bold;
 }
