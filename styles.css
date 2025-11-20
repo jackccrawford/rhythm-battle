@@ -100,8 +100,18 @@ canvas {
 h1 {
     font-size: 48px;
     margin-bottom: 30px;
-    color: #ff3366;
-    text-shadow: 0 0 10px #ff3366;
+    color: #FF1493;
+    text-shadow: 0 0 20px #FF1493, 0 0 30px #FF1493, 0 0 40px #FF1493;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        text-shadow: 0 0 20px #FF1493, 0 0 30px #FF1493, 0 0 40px #FF1493;
+    }
+    to {
+        text-shadow: 0 0 30px #FF1493, 0 0 40px #FF1493, 0 0 50px #FF1493, 0 0 60px #00FFFF;
+    }
 }
 
 h2 {
@@ -256,8 +266,78 @@ button:hover {
     100% { opacity: 0; transform: scale(1.5); }
 }
 
+/* Game Over Screen Styles */
 #finalDifficulty {
     margin: 10px 0;
     font-size: 20px;
     font-weight: bold;
+}
+
+.result-message {
+    font-size: 36px;
+    font-weight: bold;
+    margin: 20px 0;
+    text-shadow: 0 0 10px currentColor;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.final-grade {
+    font-size: 72px;
+    font-weight: bold;
+    margin: 20px 0;
+    text-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
+    animation: gradePop 0.5s ease-out;
+}
+
+@keyframes gradePop {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.stats-container {
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+    border: 2px solid #FF1493;
+}
+
+.stats-container div {
+    margin: 10px 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Manga-style effects */
+.game-container {
+    box-shadow: 0 0 30px rgba(255, 20, 147, 0.5);
+}
+
+button {
+    position: relative;
+    overflow: hidden;
+}
+
+button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+button:active::before {
+    width: 300px;
+    height: 300px;
 }

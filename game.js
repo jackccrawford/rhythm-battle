@@ -25,6 +25,19 @@ let audioContext = null;
 let judgmentTexts = []; // Array to store judgment text animations
 let currentDifficulty = 'easy'; // Default difficulty
 
+// Visual effects
+let particles = [];
+let screenShake = { x: 0, y: 0, intensity: 0 };
+let health = 100;
+let opponentHealth = 100;
+let backgroundPulse = 0;
+
+// Story and progression
+let currentOpponent = 0;
+let storyProgress = 0;
+let unlockedSongs = [0]; // Start with first song unlocked
+let achievements = [];
+
 // Difficulty settings
 const difficulties = {
     easy: {
@@ -50,21 +63,93 @@ const difficulties = {
     }
 };
 
-// Lanes and keys
+// Manga-inspired color scheme
+const COLORS = {
+    primary: '#FF1493',      // Hot Pink
+    secondary: '#00FFFF',    // Cyan
+    accent: '#9D00FF',       // Purple
+    perfect: '#FFD700',      // Gold
+    good: '#00FF00',         // Green
+    okay: '#FFA500',         // Orange
+    miss: '#FF0000',         // Red
+    health: '#00FF7F',       // Spring Green
+    opponentHealth: '#FF1493' // Hot Pink
+};
+
+// Lanes and keys - Updated with manga colors
 const lanes = [
-    { key: 'ArrowLeft', x: 200, color: '#FF5555', active: false, notes: [] },
-    { key: 'ArrowDown', x: 300, color: '#55FF55', active: false, notes: [] },
-    { key: 'ArrowUp', x: 400, color: '#5555FF', active: false, notes: [] },
-    { key: 'ArrowRight', x: 500, color: '#FFFF55', active: false, notes: [] }
+    { key: 'ArrowLeft', x: 200, color: COLORS.primary, active: false, notes: [] },
+    { key: 'ArrowDown', x: 300, color: COLORS.secondary, active: false, notes: [] },
+    { key: 'ArrowUp', x: 400, color: COLORS.accent, active: false, notes: [] },
+    { key: 'ArrowRight', x: 500, color: '#FFFF00', active: false, notes: [] }
 ];
 
-// Timing judgments
+// Timing judgments - Updated with manga colors and Japanese-inspired text
 const judgments = {
-    PERFECT: { score: 100, text: 'PERFECT!', class: 'perfect', color: '#FF5555' },
-    GOOD: { score: 75, text: 'GOOD!', class: 'good', color: '#55FF55' },
-    OKAY: { score: 50, text: 'OKAY', class: 'okay', color: '#5555FF' },
-    MISS: { score: 0, text: 'MISS', class: 'miss', color: '#AAAAAA' }
+    PERFECT: { score: 100, text: 'PERFECT!!', class: 'perfect', color: COLORS.perfect, healthDamage: 0, heal: 5 },
+    GOOD: { score: 75, text: 'GOOD!', class: 'good', color: COLORS.good, healthDamage: 0, heal: 2 },
+    OKAY: { score: 50, text: 'OK', class: 'okay', color: COLORS.okay, healthDamage: 2, heal: 0 },
+    MISS: { score: 0, text: 'MISS', class: 'miss', color: COLORS.miss, healthDamage: 5, heal: 0 }
 };
+
+// Opponent/Rival data (Manga style)
+const opponents = [
+    {
+        name: 'Melody',
+        title: 'The Beginner',
+        difficulty: 'easy',
+        bio: 'A cheerful rival who loves pop music!',
+        color: '#FFB6C1',
+        songId: 0
+    },
+    {
+        name: 'Tempo',
+        title: 'The Challenger',
+        difficulty: 'medium',
+        bio: 'A confident rival with electronic vibes!',
+        color: '#00CED1',
+        songId: 1
+    },
+    {
+        name: 'Harmony',
+        title: 'The Master',
+        difficulty: 'hard',
+        bio: 'The ultimate rhythm master!',
+        color: '#9370DB',
+        songId: 2
+    }
+];
+
+// Song data
+const songs = [
+    {
+        id: 0,
+        name: 'First Steps',
+        artist: 'Tutorial Theme',
+        bpm: 120,
+        duration: 15000,
+        difficulty: 'easy',
+        unlocked: true
+    },
+    {
+        id: 1,
+        name: 'Electric Dreams',
+        artist: 'Synth Wave',
+        bpm: 140,
+        duration: 15000,
+        difficulty: 'medium',
+        unlocked: false
+    },
+    {
+        id: 2,
+        name: 'Harmonic Clash',
+        artist: 'Final Battle',
+        bpm: 160,
+        duration: 15000,
+        difficulty: 'hard',
+        unlocked: false
+    }
+];
 
 // Initialize the game
 function init() {
@@ -172,17 +257,96 @@ function resetGame() {
     misses = 0;
     totalNotes = 0;
     judgmentTexts = [];
-    
+    particles = [];
+    health = 100;
+    opponentHealth = 100;
+    screenShake = { x: 0, y: 0, intensity: 0 };
+
     // Clear all notes
     lanes.forEach(lane => {
         lane.notes = [];
         lane.active = false;
     });
-    
+
     // Update UI
     updateScore();
     updateCombo();
     updateAccuracy();
+}
+
+// Particle system
+class Particle {
+    constructor(x, y, color, velocity) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.vx = velocity.x;
+        this.vy = velocity.y;
+        this.life = 1.0;
+        this.size = Math.random() * 4 + 2;
+        this.decay = Math.random() * 0.02 + 0.01;
+    }
+
+    update(deltaTime) {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.2; // Gravity
+        this.life -= this.decay;
+    }
+
+    draw(ctx) {
+        ctx.globalAlpha = this.life;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+    }
+
+    isDead() {
+        return this.life <= 0;
+    }
+}
+
+// Create particle burst
+function createParticleBurst(x, y, color, count = 20) {
+    for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count;
+        const speed = Math.random() * 3 + 2;
+        particles.push(new Particle(x, y, color, {
+            x: Math.cos(angle) * speed,
+            y: Math.sin(angle) * speed
+        }));
+    }
+}
+
+// Screen shake
+function applyScreenShake(intensity) {
+    screenShake.intensity = intensity;
+}
+
+function updateScreenShake(deltaTime) {
+    if (screenShake.intensity > 0) {
+        screenShake.x = (Math.random() - 0.5) * screenShake.intensity;
+        screenShake.y = (Math.random() - 0.5) * screenShake.intensity;
+        screenShake.intensity *= 0.9; // Decay
+
+        if (screenShake.intensity < 0.1) {
+            screenShake.intensity = 0;
+            screenShake.x = 0;
+            screenShake.y = 0;
+        }
+    }
+}
+
+// Update particles
+function updateParticles(deltaTime) {
+    for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update(deltaTime);
+        if (particles[i].isDead()) {
+            particles.splice(i, 1);
+        }
+    }
 }
 
 // Load a demo song pattern
@@ -313,23 +477,23 @@ function gameLoop(timestamp) {
 // Update game state
 function update(deltaTime) {
     const diffSettings = difficulties[currentDifficulty];
-    
+
     // Move notes
     lanes.forEach(lane => {
         lane.notes.forEach(note => {
             note.y -= diffSettings.noteSpeed; // Changed from += to -= to move upward
-            
+
             // Check for missed notes
             if (!note.hit && !note.missed && note.y < TARGET_Y - TARGET_HEIGHT - diffSettings.okayRange) { // Changed from > to <
                 note.missed = true;
                 missNote();
             }
         });
-        
+
         // Remove notes that are off-screen
         lane.notes = lane.notes.filter(note => note.y > -NOTE_HEIGHT); // Changed from < CANVAS_HEIGHT + NOTE_HEIGHT
     });
-    
+
     // Update judgment text animations
     for (let i = judgmentTexts.length - 1; i >= 0; i--) {
         const text = judgmentTexts[i];
@@ -338,7 +502,27 @@ function update(deltaTime) {
             judgmentTexts.splice(i, 1);
         }
     }
-    
+
+    // Update particles
+    updateParticles(deltaTime);
+
+    // Update screen shake
+    updateScreenShake(deltaTime);
+
+    // Update background pulse
+    backgroundPulse = Math.max(0, backgroundPulse - 0.02);
+
+    // Check if health is depleted
+    if (health <= 0) {
+        endGame();
+        return;
+    }
+
+    // Simulate opponent taking damage when player does well
+    if (combo > 0 && combo % 5 === 0) {
+        opponentHealth = Math.max(0, opponentHealth - 0.5);
+    }
+
     // Check if all notes are gone
     const remainingNotes = lanes.reduce((total, lane) => total + lane.notes.length, 0);
     if (remainingNotes === 0 && totalNotes > 0) {
@@ -348,13 +532,52 @@ function update(deltaTime) {
 
 // Draw the game
 function drawGame() {
+    // Save context state
+    ctx.save();
+
+    // Apply screen shake
+    ctx.translate(screenShake.x, screenShake.y);
+
     // Clear the canvas
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    
-    // Draw background
-    ctx.fillStyle = '#1a1a1a';
+
+    // Draw animated background with pulse
+    const pulseIntensity = backgroundPulse * 20;
+    const gradient = ctx.createRadialGradient(
+        CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 0,
+        CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, CANVAS_WIDTH / 2
+    );
+    gradient.addColorStop(0, `rgba(26, 26, 26, 1)`);
+    gradient.addColorStop(1, `rgba(${pulseIntensity}, ${pulseIntensity}, ${pulseIntensity}, 1)`);
+    ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    
+
+    // Draw manga-style speed lines when combo is high
+    if (combo > 10) {
+        ctx.save();
+        ctx.strokeStyle = `rgba(255, 255, 255, ${Math.min(combo / 50, 0.3)})`;
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            const startDist = 50;
+            const endDist = 400;
+            ctx.beginPath();
+            ctx.moveTo(
+                CANVAS_WIDTH / 2 + Math.cos(angle) * startDist,
+                CANVAS_HEIGHT / 2 + Math.sin(angle) * startDist
+            );
+            ctx.lineTo(
+                CANVAS_WIDTH / 2 + Math.cos(angle) * endDist,
+                CANVAS_HEIGHT / 2 + Math.sin(angle) * endDist
+            );
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    // Draw health bars
+    drawHealthBars();
+
     // Draw staff lines (for musical appearance)
     ctx.strokeStyle = '#333333';
     ctx.lineWidth = 1;
@@ -419,17 +642,50 @@ function drawGame() {
         });
     });
     
-    // Draw judgment texts
+    // Draw particles
+    particles.forEach(particle => {
+        particle.draw(ctx);
+    });
+
+    // Draw judgment texts with manga-style effects
     judgmentTexts.forEach(text => {
         const opacity = Math.min(1, text.life / 500);
+        const scale = 1 + (1 - opacity) * 0.5; // Scale up as it fades
+
+        ctx.save();
         ctx.globalAlpha = opacity;
-        ctx.font = '24px Arial';
-        ctx.fillStyle = text.color;
+        ctx.translate(text.x, text.y);
+        ctx.scale(scale, scale);
+
+        // Draw text outline (manga style)
+        ctx.font = 'bold 32px Arial';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 4;
         ctx.textAlign = 'center';
-        ctx.fillText(text.text, text.x, text.y);
+        ctx.strokeText(text.text, 0, 0);
+
+        // Draw text fill
+        ctx.fillStyle = text.color;
+        ctx.fillText(text.text, 0, 0);
+
+        ctx.restore();
     });
     ctx.globalAlpha = 1;
-    
+
+    // Draw combo burst text
+    if (combo > 0 && combo % 10 === 0) {
+        ctx.save();
+        ctx.font = 'bold 20px Arial';
+        ctx.fillStyle = COLORS.primary;
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 3;
+        ctx.textAlign = 'center';
+        const comboText = `${combo} COMBO!`;
+        ctx.strokeText(comboText, CANVAS_WIDTH / 2, CANVAS_HEIGHT - 50);
+        ctx.fillText(comboText, CANVAS_WIDTH / 2, CANVAS_HEIGHT - 50);
+        ctx.restore();
+    }
+
     // Draw dividers between lanes
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 2;
@@ -438,12 +694,58 @@ function drawGame() {
         ctx.moveTo(lane.x - LANE_WIDTH / 2, 0);
         ctx.lineTo(lane.x - LANE_WIDTH / 2, CANVAS_HEIGHT);
         ctx.stroke();
-        
+
         ctx.beginPath();
         ctx.moveTo(lane.x + LANE_WIDTH / 2, 0);
         ctx.lineTo(lane.x + LANE_WIDTH / 2, CANVAS_HEIGHT);
         ctx.stroke();
     });
+
+    // Restore context state
+    ctx.restore();
+}
+
+// Draw health bars
+function drawHealthBars() {
+    const barWidth = 200;
+    const barHeight = 20;
+    const margin = 20;
+
+    // Player health bar (bottom left)
+    ctx.save();
+    ctx.fillStyle = '#333';
+    ctx.fillRect(margin, CANVAS_HEIGHT - margin - barHeight, barWidth, barHeight);
+
+    ctx.fillStyle = COLORS.health;
+    ctx.fillRect(margin, CANVAS_HEIGHT - margin - barHeight, (health / 100) * barWidth, barHeight);
+
+    ctx.strokeStyle = '#FFF';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(margin, CANVAS_HEIGHT - margin - barHeight, barWidth, barHeight);
+
+    ctx.fillStyle = '#FFF';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText('EVALYN', margin, CANVAS_HEIGHT - margin - barHeight - 5);
+
+    // Opponent health bar (top right)
+    ctx.fillStyle = '#333';
+    ctx.fillRect(CANVAS_WIDTH - margin - barWidth, margin, barWidth, barHeight);
+
+    ctx.fillStyle = COLORS.opponentHealth;
+    ctx.fillRect(CANVAS_WIDTH - margin - barWidth, margin, (opponentHealth / 100) * barWidth, barHeight);
+
+    ctx.strokeStyle = '#FFF';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(CANVAS_WIDTH - margin - barWidth, margin, barWidth, barHeight);
+
+    const currentOpp = opponents[currentOpponent] || opponents[0];
+    ctx.fillStyle = '#FFF';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText(currentOpp.name.toUpperCase(), CANVAS_WIDTH - margin, margin - 5);
+
+    ctx.restore();
 }
 
 // Handle key down events
@@ -476,42 +778,54 @@ function checkHit(lane) {
     // Find the closest unhit note in the lane
     const note = lane.notes.find(note => !note.hit && !note.missed);
     const diffSettings = difficulties[currentDifficulty];
-    
+
     if (!note) return;
-    
+
     // Calculate distance from target
     const distance = Math.abs(note.y - TARGET_Y);
-    
+
     // Determine judgment based on distance
     let judgment;
     if (distance <= diffSettings.perfectRange) {
         judgment = judgments.PERFECT;
         audioManager.playSound('perfect');
+        createParticleBurst(lane.x, TARGET_Y, judgment.color, 30);
+        applyScreenShake(8);
+        backgroundPulse = 1.0;
     } else if (distance <= diffSettings.goodRange) {
         judgment = judgments.GOOD;
         audioManager.playSound('good');
+        createParticleBurst(lane.x, TARGET_Y, judgment.color, 20);
+        applyScreenShake(4);
+        backgroundPulse = 0.7;
     } else if (distance <= diffSettings.okayRange) {
         judgment = judgments.OKAY;
         audioManager.playSound('okay');
+        createParticleBurst(lane.x, TARGET_Y, judgment.color, 10);
+        backgroundPulse = 0.3;
     } else {
         // Too far from target, no hit
         return;
     }
-    
+
     // Mark the note as hit
     note.hit = true;
-    
+
+    // Update health
+    health = Math.min(100, health + judgment.heal);
+    opponentHealth = Math.max(0, opponentHealth - judgment.healthDamage);
+
     // Update score and combo
     score += judgment.score * (1 + combo * 0.1);
     combo++;
     maxCombo = Math.max(maxCombo, combo);
     hits++;
-    
+
     // Update UI
     updateScore();
     updateCombo();
     updateAccuracy();
-    
+
     // Show judgment text
     judgmentTexts.push({
         text: judgment.text,
@@ -526,14 +840,20 @@ function checkHit(lane) {
 function missNote() {
     combo = 0;
     misses++;
-    
+
+    // Damage player health
+    health = Math.max(0, health - judgments.MISS.healthDamage);
+
     // Play miss sound
     audioManager.playSound('miss');
-    
+
+    // Visual feedback for miss
+    applyScreenShake(10);
+
     // Update UI
     updateCombo();
     updateAccuracy();
-    
+
     // Show miss text
     judgmentTexts.push({
         text: judgments.MISS.text,
@@ -561,25 +881,78 @@ function updateAccuracy() {
     document.getElementById('accuracy').textContent = `Accuracy: ${accuracy.toFixed(2)}%`;
 }
 
+// Calculate grade based on accuracy and health
+function calculateGrade() {
+    const accuracy = totalNotes > 0 ? (hits / totalNotes) * 100 : 0;
+    const healthPercent = (health / 100) * 100;
+    const comboRatio = totalNotes > 0 ? (maxCombo / totalNotes) * 100 : 0;
+
+    // Overall performance score
+    const performanceScore = (accuracy * 0.6) + (healthPercent * 0.2) + (comboRatio * 0.2);
+
+    if (performanceScore >= 95) return { grade: 'SS', color: COLORS.perfect };
+    if (performanceScore >= 90) return { grade: 'S', color: COLORS.perfect };
+    if (performanceScore >= 80) return { grade: 'A', color: COLORS.good };
+    if (performanceScore >= 70) return { grade: 'B', color: COLORS.good };
+    if (performanceScore >= 60) return { grade: 'C', color: COLORS.okay };
+    if (performanceScore >= 50) return { grade: 'D', color: COLORS.okay };
+    return { grade: 'F', color: COLORS.miss };
+}
+
 // End the game
 function endGame() {
     gameRunning = false;
-    
-    // Play game over sound and stop music
+
+    // Calculate grade
+    const gradeInfo = calculateGrade();
+    const accuracy = ((hits / totalNotes) * 100).toFixed(2);
+
+    // Determine victory or defeat
+    const isVictory = health > 0 && (opponentHealth <= 0 || accuracy >= 50);
+
+    // Play appropriate sound and stop music
     audioManager.stopMusic();
-    audioManager.playSound('gameover');
-    
+    if (isVictory) {
+        audioManager.playSound('start'); // Use start sound as victory sound
+        // Unlock next song if victory
+        if (currentOpponent < opponents.length - 1) {
+            unlockedSongs.push(currentOpponent + 1);
+        }
+    } else {
+        audioManager.playSound('gameover');
+    }
+
     // Update final score display
     document.getElementById('finalScore').textContent = `Score: ${Math.floor(score)}`;
-    document.getElementById('finalAccuracy').textContent = `Accuracy: ${((hits / totalNotes) * 100).toFixed(2)}%`;
+    document.getElementById('finalAccuracy').textContent = `Accuracy: ${accuracy}%`;
     document.getElementById('finalDifficulty').textContent = `Difficulty: ${currentDifficulty.charAt(0).toUpperCase() + currentDifficulty.slice(1)}`;
-    
+
+    // Add grade display
+    const gradeElement = document.getElementById('finalGrade');
+    if (gradeElement) {
+        gradeElement.textContent = `Grade: ${gradeInfo.grade}`;
+        gradeElement.style.color = gradeInfo.color;
+    }
+
+    // Add max combo display
+    const maxComboElement = document.getElementById('finalMaxCombo');
+    if (maxComboElement) {
+        maxComboElement.textContent = `Max Combo: ${maxCombo}`;
+    }
+
+    // Add result message
+    const resultElement = document.getElementById('resultMessage');
+    if (resultElement) {
+        resultElement.textContent = isVictory ? '🎉 VICTORY! 🎉' : '💔 DEFEAT 💔';
+        resultElement.style.color = isVictory ? COLORS.perfect : COLORS.miss;
+    }
+
     // Sync difficulty buttons on game over screen with current difficulty
     document.querySelectorAll('#gameOver .difficulty-btn').forEach(btn => {
         btn.classList.remove('selected');
     });
     document.getElementById(`${currentDifficulty}ButtonGameOver`).classList.add('selected');
-    
+
     // Show game over screen
     document.getElementById('gameOver').classList.remove('hidden');
 }
