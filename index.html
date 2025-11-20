@@ -37,6 +37,16 @@
                 </div>
             </div>
         </div>
+        <div id="pauseOverlay" class="menu hidden">
+            <h1>⏸️ PAUSED</h1>
+            <p style="font-size: 20px; margin: 20px 0;">Press ESC to resume</p>
+            <div class="pause-stats">
+                <div>Current Score: <span id="pauseScore">0</span></div>
+                <div>Current Combo: <span id="pauseCombo">0</span></div>
+                <div>Accuracy: <span id="pauseAccuracy">0%</span></div>
+            </div>
+            <button onclick="togglePause()">Resume</button>
+        </div>
         <div id="gameOver" class="menu hidden">
             <h1>Game Over</h1>
             <div id="resultMessage" class="result-message">🎉 VICTORY! 🎉</div>

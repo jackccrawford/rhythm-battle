@@ -19,6 +19,7 @@ let hits = 0;
 let misses = 0;
 let totalNotes = 0;
 let gameRunning = false;
+let gamePaused = false;
 let lastTime = 0;
 let currentSong = null;
 let audioContext = null;
@@ -261,12 +262,19 @@ function resetGame() {
     health = 100;
     opponentHealth = 100;
     screenShake = { x: 0, y: 0, intensity: 0 };
+    gamePaused = false;
 
     // Clear all notes
     lanes.forEach(lane => {
         lane.notes = [];
         lane.active = false;
     });
+
+    // Hide pause overlay if it was visible
+    const pauseOverlay = document.getElementById('pauseOverlay');
+    if (pauseOverlay) {
+        pauseOverlay.classList.add('hidden');
+    }
 
     // Update UI
     updateScore();
@@ -476,6 +484,9 @@ function gameLoop(timestamp) {
 
 // Update game state
 function update(deltaTime) {
+    // Skip updates when paused
+    if (gamePaused) return;
+
     const diffSettings = difficulties[currentDifficulty];
 
     // Move notes
@@ -577,6 +588,9 @@ function drawGame() {
 
     // Draw health bars
     drawHealthBars();
+
+    // Draw character portraits
+    drawCharacterPortraits();
 
     // Draw staff lines (for musical appearance)
     ctx.strokeStyle = '#333333';
@@ -748,13 +762,216 @@ function drawHealthBars() {
     ctx.restore();
 }
 
+// Draw manga-style character portraits
+function drawCharacterPortraits() {
+    const currentOpp = opponents[currentOpponent] || opponents[0];
+
+    // Draw player character (left side)
+    drawPlayerPortrait(50, CANVAS_HEIGHT / 2 - 50);
+
+    // Draw opponent character (right side)
+    drawOpponentPortrait(CANVAS_WIDTH - 130, 80, currentOpp);
+}
+
+// Draw player portrait (Evalyn)
+function drawPlayerPortrait(x, y) {
+    ctx.save();
+
+    // Determine expression based on health and combo
+    let expression = 'neutral';
+    if (combo >= 20) expression = 'happy';
+    else if (combo >= 10) expression = 'confident';
+    else if (health < 30) expression = 'worried';
+    else if (health < 60) expression = 'determined';
+
+    // Draw face circle
+    ctx.fillStyle = '#FFE4C4'; // Skin tone
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(x + 40, y + 40, 35, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw hair (manga style)
+    ctx.fillStyle = COLORS.primary; // Hot pink hair
+    ctx.beginPath();
+    ctx.arc(x + 40, y + 25, 38, Math.PI, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw hair strands
+    for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.moveTo(x + 15 + i * 12, y + 10);
+        ctx.quadraticCurveTo(x + 18 + i * 12, y - 5, x + 20 + i * 12, y + 5);
+        ctx.stroke();
+    }
+
+    // Draw eyes based on expression
+    ctx.fillStyle = '#000';
+    if (expression === 'happy') {
+        // Happy eyes (^_^)
+        ctx.beginPath();
+        ctx.arc(x + 28, y + 38, 5, 0, Math.PI, true);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x + 52, y + 38, 5, 0, Math.PI, true);
+        ctx.stroke();
+    } else if (expression === 'worried') {
+        // Worried eyes
+        ctx.beginPath();
+        ctx.arc(x + 28, y + 40, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x + 52, y + 40, 3, 0, Math.PI * 2);
+        ctx.fill();
+    } else {
+        // Normal eyes
+        ctx.beginPath();
+        ctx.arc(x + 28, y + 38, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x + 52, y + 38, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eye shine
+        ctx.fillStyle = '#FFF';
+        ctx.beginPath();
+        ctx.arc(x + 30, y + 36, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x + 54, y + 36, 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Draw mouth based on expression
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    if (expression === 'happy') {
+        ctx.beginPath();
+        ctx.arc(x + 40, y + 50, 8, 0, Math.PI);
+        ctx.stroke();
+    } else if (expression === 'worried') {
+        ctx.beginPath();
+        ctx.arc(x + 40, y + 55, 6, Math.PI, Math.PI * 2);
+        ctx.stroke();
+    } else {
+        ctx.beginPath();
+        ctx.moveTo(x + 35, y + 52);
+        ctx.lineTo(x + 45, y + 52);
+        ctx.stroke();
+    }
+
+    ctx.restore();
+}
+
+// Draw opponent portrait
+function drawOpponentPortrait(x, y, opponent) {
+    ctx.save();
+
+    // Determine expression based on opponent health
+    let expression = 'confident';
+    if (opponentHealth < 30) expression = 'worried';
+    else if (opponentHealth < 60) expression = 'determined';
+    else if (combo < 5) expression = 'smug';
+
+    // Draw face circle
+    ctx.fillStyle = '#F5DEB3'; // Different skin tone
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(x + 40, y + 40, 35, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw hair (opponent color)
+    ctx.fillStyle = opponent.color;
+    ctx.beginPath();
+    ctx.arc(x + 40, y + 25, 38, Math.PI, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw side bangs
+    ctx.beginPath();
+    ctx.moveTo(x + 10, y + 30);
+    ctx.quadraticCurveTo(x + 5, y + 50, x + 15, y + 60);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + 70, y + 30);
+    ctx.quadraticCurveTo(x + 75, y + 50, x + 65, y + 60);
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw eyes based on expression
+    ctx.fillStyle = '#000';
+    if (expression === 'worried') {
+        ctx.beginPath();
+        ctx.arc(x + 28, y + 40, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x + 52, y + 40, 3, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (expression === 'smug') {
+        ctx.beginPath();
+        ctx.arc(x + 28, y + 38, 4, Math.PI, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x + 52, y + 38, 4, Math.PI, Math.PI * 2);
+        ctx.stroke();
+    } else {
+        ctx.beginPath();
+        ctx.arc(x + 28, y + 38, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x + 52, y + 38, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#FFF';
+        ctx.beginPath();
+        ctx.arc(x + 30, y + 36, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x + 54, y + 36, 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Draw mouth based on expression
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    if (expression === 'smug') {
+        ctx.beginPath();
+        ctx.moveTo(x + 32, y + 52);
+        ctx.quadraticCurveTo(x + 40, y + 55, x + 48, y + 52);
+        ctx.stroke();
+    } else if (expression === 'worried') {
+        ctx.beginPath();
+        ctx.arc(x + 40, y + 55, 6, Math.PI, Math.PI * 2);
+        ctx.stroke();
+    } else {
+        ctx.beginPath();
+        ctx.moveTo(x + 35, y + 52);
+        ctx.lineTo(x + 45, y + 52);
+        ctx.stroke();
+    }
+
+    ctx.restore();
+}
+
 // Handle key down events
 function handleKeyDown(event) {
-    if (!gameRunning) return;
-    
+    // Handle pause with ESC key
+    if (event.key === 'Escape' && gameRunning) {
+        togglePause();
+        return;
+    }
+
+    if (!gameRunning || gamePaused) return;
+
     const key = event.key;
     const lane = lanes.find(lane => lane.key === key);
-    
+
     if (lane && !lane.active) {
         lane.active = true;
         checkHit(lane);
@@ -763,13 +980,34 @@ function handleKeyDown(event) {
 
 // Handle key up events
 function handleKeyUp(event) {
-    if (!gameRunning) return;
-    
+    if (!gameRunning || gamePaused) return;
+
     const key = event.key;
     const lane = lanes.find(lane => lane.key === key);
-    
+
     if (lane) {
         lane.active = false;
+    }
+}
+
+// Toggle pause state
+function togglePause() {
+    gamePaused = !gamePaused;
+
+    const pauseOverlay = document.getElementById('pauseOverlay');
+    if (gamePaused) {
+        // Update pause screen stats
+        document.getElementById('pauseScore').textContent = Math.floor(score);
+        document.getElementById('pauseCombo').textContent = combo;
+        const total = hits + misses;
+        const accuracy = total > 0 ? (hits / total) * 100 : 0;
+        document.getElementById('pauseAccuracy').textContent = `${accuracy.toFixed(2)}%`;
+
+        pauseOverlay.classList.remove('hidden');
+        audioManager.pauseMusic();
+    } else {
+        pauseOverlay.classList.add('hidden');
+        audioManager.playMusic();
     }
 }
 

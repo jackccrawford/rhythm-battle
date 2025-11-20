@@ -341,3 +341,22 @@ button:active::before {
     width: 300px;
     height: 300px;
 }
+
+/* Pause screen styles */
+.pause-stats {
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+    border: 2px solid #00FFFF;
+}
+
+.pause-stats div {
+    margin: 10px 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.pause-stats span {
+    color: #00FFFF;
+}
