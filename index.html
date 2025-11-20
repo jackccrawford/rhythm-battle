@@ -17,6 +17,7 @@
         </div>
         <div id="menu" class="menu">
             <h1>Rhythm Battle</h1>
+            <h2 style="color: #ff1493; margin-top: -10px; font-size: 2em; text-shadow: 0 0 10px #ff1493;">Evalyn's Game</h2>
             <div class="difficulty-selector">
                 <h2>Select Difficulty</h2>
                 <div class="difficulty-buttons">
@@ -48,24 +49,25 @@
             <button onclick="togglePause()">Resume</button>
         </div>
         <div id="gameOver" class="menu hidden">
-            <h1>Game Over</h1>
-            <div id="resultMessage" class="result-message">🎉 VICTORY! 🎉</div>
-            <div id="finalGrade" class="final-grade">Grade: S</div>
+            <h1 style="font-size: 32px; margin: 8px 0;">Game Over</h1>
+            <h2 style="color: #ff1493; margin: 3px 0; font-size: 1.3em; text-shadow: 0 0 10px #ff1493;">Evalyn's Results</h2>
+            <div id="resultMessage" class="result-message" style="font-size: 24px; margin: 5px 0;">🎉 VICTORY! 🎉</div>
+            <div id="finalGrade" class="final-grade" style="font-size: 40px; margin: 5px 0;">Grade: S</div>
             <div class="stats-container">
                 <div id="finalScore">Score: 0</div>
                 <div id="finalAccuracy">Accuracy: 0%</div>
                 <div id="finalMaxCombo">Max Combo: 0</div>
                 <div id="finalDifficulty">Difficulty: Easy</div>
             </div>
-            <div class="difficulty-selector">
-                <h2>Change Difficulty</h2>
+            <div class="difficulty-selector" style="margin: 5px 0;">
+                <h2 style="font-size: 18px; margin: 5px 0;">Change Difficulty</h2>
                 <div class="difficulty-buttons">
                     <button id="easyButtonGameOver" class="difficulty-btn selected">Easy</button>
                     <button id="mediumButtonGameOver" class="difficulty-btn">Medium</button>
                     <button id="hardButtonGameOver" class="difficulty-btn">Hard</button>
                 </div>
             </div>
-            <button id="restartButton">Play Again</button>
+            <button id="restartButton" style="font-size: 1.1em; padding: 10px 25px; margin: 8px 0 15px 0; background: linear-gradient(135deg, #ff1493, #00ffff); color: white; border: 3px solid white; border-radius: 10px; cursor: pointer; font-weight: bold; box-shadow: 0 0 20px #ff1493, 0 0 30px #00ffff;">🎮 PLAY AGAIN 🎮</button>
         </div>
     </div>
     <script src="audio.js"></script>

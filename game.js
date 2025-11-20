@@ -42,25 +42,25 @@ let achievements = [];
 // Difficulty settings
 const difficulties = {
     easy: {
-        noteSpeed: 4,
-        noteFrequency: 1.0, // Multiplier for note frequency
-        perfectRange: 20,
-        goodRange: 35,
-        okayRange: 50
+        noteSpeed: 2,
+        noteFrequency: 0.7, // Multiplier for note frequency
+        perfectRange: 40,
+        goodRange: 70,
+        okayRange: 100
     },
     medium: {
         noteSpeed: 5,
         noteFrequency: 1.5,
-        perfectRange: 15,
-        goodRange: 30,
-        okayRange: 45
+        perfectRange: 30,
+        goodRange: 55,
+        okayRange: 80
     },
     hard: {
         noteSpeed: 6.5,
         noteFrequency: 2.0,
-        perfectRange: 10,
-        goodRange: 25,
-        okayRange: 40
+        perfectRange: 20,
+        goodRange: 40,
+        okayRange: 60
     }
 };
 
@@ -737,10 +737,13 @@ function drawHealthBars() {
     ctx.lineWidth = 2;
     ctx.strokeRect(margin, CANVAS_HEIGHT - margin - barHeight, barWidth, barHeight);
 
-    ctx.fillStyle = '#FFF';
-    ctx.font = 'bold 12px Arial';
+    ctx.fillStyle = '#ff1493';
+    ctx.font = 'bold 28px Arial';
     ctx.textAlign = 'left';
-    ctx.fillText('EVALYN', margin, CANVAS_HEIGHT - margin - barHeight - 5);
+    ctx.shadowColor = '#ff1493';
+    ctx.shadowBlur = 12;
+    ctx.fillText('EVALYN', margin, CANVAS_HEIGHT - margin - barHeight - 35);
+    ctx.shadowBlur = 0;
 
     // Opponent health bar (top right)
     ctx.fillStyle = '#333';

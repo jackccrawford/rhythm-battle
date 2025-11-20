@@ -24,6 +24,10 @@ body {
     overflow: hidden;
 }
 
+.game-container .menu {
+    overflow-y: auto;
+}
+
 canvas {
     background-color: #1a1a1a;
     display: block;
@@ -91,6 +95,8 @@ canvas {
     align-items: center;
     background-color: rgba(0, 0, 0, 0.8);
     z-index: 10;
+    overflow-y: auto;
+    padding: 20px;
 }
 
 .hidden {
@@ -121,23 +127,23 @@ h2 {
 }
 
 .difficulty-selector {
-    margin-bottom: 20px;
+    margin: 10px 0;
     text-align: center;
 }
 
 .difficulty-buttons {
     display: flex;
     justify-content: center;
-    gap: 10px;
-    margin-bottom: 15px;
+    gap: 8px;
+    margin-bottom: 5px;
 }
 
 .difficulty-btn {
     background-color: #333;
     color: white;
     border: none;
-    padding: 10px 20px;
-    font-size: 16px;
+    padding: 8px 15px;
+    font-size: 14px;
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.3s;
@@ -302,15 +308,15 @@ button:hover {
 
 .stats-container {
     background-color: rgba(0, 0, 0, 0.5);
-    padding: 20px;
-    border-radius: 10px;
-    margin: 20px 0;
+    padding: 8px 15px;
+    border-radius: 8px;
+    margin: 5px 0;
     border: 2px solid #FF1493;
 }
 
 .stats-container div {
-    margin: 10px 0;
-    font-size: 18px;
+    margin: 3px 0;
+    font-size: 15px;
     font-weight: bold;
 }
 
