@@ -2,74 +2,161 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="theme-color" content="#140a24">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Rhythm Battle</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Bungee&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="game-container">
-        <canvas id="gameCanvas"></canvas>
-        <div id="score">Score: 0</div>
-        <div id="combo">Combo: 0</div>
-        <div id="accuracy">Accuracy: 0%</div>
-        <div id="sound-control">
-            <button id="muteButton">🔊</button>
+    <div id="stage">
+        <canvas id="gameCanvas" aria-label="Rhythm Battle playfield"></canvas>
+
+        <div id="hudButtons" class="hidden">
+            <button id="pauseButton" class="icon-btn" aria-label="Pause">⏸</button>
         </div>
-        <div id="menu" class="menu">
-            <h1>Rhythm Battle</h1>
-            <h2 style="color: #ff1493; margin-top: -10px; font-size: 2em; text-shadow: 0 0 10px #ff1493;">Evalyn's Game</h2>
-            <div class="difficulty-selector">
-                <h2>Select Difficulty</h2>
-                <div class="difficulty-buttons">
-                    <button id="easyButton" class="difficulty-btn selected">Easy</button>
-                    <button id="mediumButton" class="difficulty-btn">Medium</button>
-                    <button id="hardButton" class="difficulty-btn">Hard</button>
+        <button id="muteButton" class="icon-btn" aria-label="Mute sound">🔊</button>
+
+        <!-- Title -->
+        <section id="titleScreen" class="screen">
+            <div class="logo">
+                <span class="logo-top">RHYTHM</span>
+                <span class="logo-bottom">BATTLE</span>
+            </div>
+            <p class="subtitle"><span id="titleName">Evalyn</span>'s Game</p>
+            <label class="name-field">
+                <span>Your name</span>
+                <input id="nameInput" type="text" maxlength="12" autocomplete="off" spellcheck="false" value="Evalyn">
+            </label>
+            <div class="stack">
+                <button id="playButton" class="btn btn-big">▶ Play</button>
+                <div class="row">
+                    <button id="howButton" class="btn btn-alt">How to play</button>
+                    <button id="settingsButton" class="btn btn-alt">Settings</button>
                 </div>
             </div>
-            <button id="startButton">Start Game</button>
-            <div class="instructions">
-                <h2>How to Play</h2>
-                <p>Press the arrow keys when the notes reach the target zone!</p>
-                <div class="key-guide">
-                    <div class="key">←</div>
-                    <div class="key">↓</div>
-                    <div class="key">↑</div>
-                    <div class="key">→</div>
+            <p class="hint">Press <kbd>Enter</kbd> or tap Play</p>
+        </section>
+
+        <!-- Rival & difficulty select -->
+        <section id="selectScreen" class="screen hidden">
+            <h2 class="screen-title">Choose your rival</h2>
+            <div id="rivalCards" class="rival-cards" role="radiogroup" aria-label="Rival"></div>
+            <p id="rivalIntro" class="rival-intro"></p>
+            <div class="difficulty" role="radiogroup" aria-label="Difficulty">
+                <button class="diff-btn" data-diff="easy" role="radio">
+                    <b>Easy</b><small>Slow notes · can't lose</small>
+                </button>
+                <button class="diff-btn" data-diff="medium" role="radio">
+                    <b>Medium</b><small>More notes</small>
+                </button>
+                <button class="diff-btn" data-diff="hard" role="radio">
+                    <b>Hard</b><small>All the notes!</small>
+                </button>
+            </div>
+            <div class="row">
+                <button id="backFromSelect" class="btn btn-alt">← Back</button>
+                <button id="startButton" class="btn btn-big">Battle!</button>
+            </div>
+        </section>
+
+        <!-- How to play -->
+        <section id="howScreen" class="screen hidden">
+            <h2 class="screen-title">How to play</h2>
+            <ol class="how-list">
+                <li><b>Watch</b> your rival sing a pattern on the left.</li>
+                <li><b>Copy it!</b> The same notes fly into <em>your</em> lanes on the right.</li>
+                <li>Hit each arrow when it touches the outline. Every note you hit plays the melody!</li>
+                <li>Fill the bar to your side to win the battle.</li>
+            </ol>
+            <div class="controls-grid">
+                <div>
+                    <h3>Keyboard</h3>
+                    <div class="keys"><kbd>←</kbd><kbd>↓</kbd><kbd>↑</kbd><kbd>→</kbd></div>
+                    <div class="keys"><kbd>A</kbd><kbd>S</kbd><kbd>W</kbd><kbd>D</kbd></div>
+                    <p><kbd>Esc</kbd> or <kbd>P</kbd> pauses</p>
+                </div>
+                <div>
+                    <h3>Touch</h3>
+                    <p>Tap the four lanes on your side. Use two thumbs for double notes!</p>
                 </div>
             </div>
-        </div>
-        <div id="pauseOverlay" class="menu hidden">
-            <h1>⏸️ PAUSED</h1>
-            <p style="font-size: 20px; margin: 20px 0;">Press ESC to resume</p>
-            <div class="pause-stats">
-                <div>Current Score: <span id="pauseScore">0</span></div>
-                <div>Current Combo: <span id="pauseCombo">0</span></div>
-                <div>Accuracy: <span id="pauseAccuracy">0%</span></div>
+            <button id="backFromHow" class="btn btn-big">Got it!</button>
+        </section>
+
+        <!-- Settings -->
+        <section id="settingsScreen" class="screen hidden">
+            <h2 class="screen-title">Settings</h2>
+            <div class="settings">
+                <label>Music volume <input id="musicVol" type="range" min="0" max="1" step="0.05"></label>
+                <label>Effects volume <input id="sfxVol" type="range" min="0" max="1" step="0.05"></label>
+                <div class="setting-row">
+                    <span>Notes move</span>
+                    <div class="toggle" role="radiogroup" aria-label="Scroll direction">
+                        <button class="toggle-btn" data-scroll="down" role="radio">Down ⬇</button>
+                        <button class="toggle-btn" data-scroll="up" role="radio">Up ⬆</button>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <span>Screen shake</span>
+                    <div class="toggle" role="radiogroup" aria-label="Screen shake">
+                        <button class="toggle-btn" data-shake="on" role="radio">On</button>
+                        <button class="toggle-btn" data-shake="off" role="radio">Off</button>
+                    </div>
+                </div>
+                <label>Timing offset <output id="offsetLabel">0 ms</output>
+                    <input id="offsetInput" type="range" min="-150" max="150" step="5">
+                    <small>Using Bluetooth headphones? If your hits keep showing “late”, slide right. “Early”? Slide left.</small>
+                </label>
             </div>
-            <button onclick="togglePause()">Resume</button>
-        </div>
-        <div id="gameOver" class="menu hidden">
-            <h1 style="font-size: 32px; margin: 8px 0;">Game Over</h1>
-            <h2 style="color: #ff1493; margin: 3px 0; font-size: 1.3em; text-shadow: 0 0 10px #ff1493;">Evalyn's Results</h2>
-            <div id="resultMessage" class="result-message" style="font-size: 24px; margin: 5px 0;">🎉 VICTORY! 🎉</div>
-            <div id="finalGrade" class="final-grade" style="font-size: 40px; margin: 5px 0;">Grade: S</div>
-            <div class="stats-container">
-                <div id="finalScore">Score: 0</div>
-                <div id="finalAccuracy">Accuracy: 0%</div>
-                <div id="finalMaxCombo">Max Combo: 0</div>
-                <div id="finalDifficulty">Difficulty: Easy</div>
+            <div class="row">
+                <button id="resetProgress" class="btn btn-danger">Reset progress</button>
+                <button id="backFromSettings" class="btn btn-big">Done</button>
             </div>
-            <div class="difficulty-selector" style="margin: 5px 0;">
-                <h2 style="font-size: 18px; margin: 5px 0;">Change Difficulty</h2>
-                <div class="difficulty-buttons">
-                    <button id="easyButtonGameOver" class="difficulty-btn selected">Easy</button>
-                    <button id="mediumButtonGameOver" class="difficulty-btn">Medium</button>
-                    <button id="hardButtonGameOver" class="difficulty-btn">Hard</button>
+        </section>
+
+        <!-- Pause -->
+        <section id="pauseScreen" class="screen hidden">
+            <h2 class="screen-title">Paused</h2>
+            <div class="stack">
+                <button id="resumeButton" class="btn btn-big">▶ Resume</button>
+                <button id="restartButton" class="btn btn-alt">↺ Restart song</button>
+                <button id="quitButton" class="btn btn-alt">✕ Quit to rivals</button>
+            </div>
+        </section>
+
+        <!-- Results -->
+        <section id="resultsScreen" class="screen hidden">
+            <div id="resultTitle" class="result-title">YOU WIN!</div>
+            <p id="resultLine" class="rival-intro"></p>
+            <div class="result-main">
+                <div id="resultGrade" class="grade">S</div>
+                <div>
+                    <div id="resultStars" class="stars" aria-label="Stars"></div>
+                    <div id="resultScore" class="result-score">0</div>
+                    <div id="resultBadges" class="badges"></div>
                 </div>
             </div>
-            <button id="restartButton" style="font-size: 1.1em; padding: 10px 25px; margin: 8px 0 15px 0; background: linear-gradient(135deg, #ff1493, #00ffff); color: white; border: 3px solid white; border-radius: 10px; cursor: pointer; font-weight: bold; box-shadow: 0 0 20px #ff1493, 0 0 30px #00ffff;">🎮 PLAY AGAIN 🎮</button>
-        </div>
+            <div class="result-stats">
+                <div><span class="j-perfect">Perfect</span><b id="statPerfect">0</b></div>
+                <div><span class="j-good">Good</span><b id="statGood">0</b></div>
+                <div><span class="j-okay">Okay</span><b id="statOkay">0</b></div>
+                <div><span class="j-miss">Miss</span><b id="statMiss">0</b></div>
+                <div><span>Max combo</span><b id="statCombo">0</b></div>
+                <div><span>Accuracy</span><b id="statAcc">0%</b></div>
+            </div>
+            <div class="row">
+                <button id="menuFromResults" class="btn btn-alt">Rivals</button>
+                <button id="retryButton" class="btn btn-alt">↺ Retry</button>
+                <button id="nextButton" class="btn btn-big">Next rival ▶</button>
+            </div>
+        </section>
     </div>
+
+    <script src="songs.js"></script>
     <script src="audio.js"></script>
     <script src="game.js"></script>
 </body>

@@ -3,104 +3,85 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Made with JavaScript](https://img.shields.io/badge/Made%20with-JavaScript-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5)
-[![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
-[![Built with Windsurf.ai](https://img.shields.io/badge/Built%20with-Windsurf.ai-blue?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEyIDJMMiAxMmwxMCAxMCAxMC0xMEwxMiAyeiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=)](https://windsurf.ai)
 
-A rhythm-based game inspired by Friday Night Funkin', built with JavaScript and HTML5 Canvas. Test your reflexes and rhythm as you press arrow keys in time with the music!
+**Evalyn's Game**: a call-and-response rhythm battle inspired by Friday Night Funkin'. Your rival sings a pattern, then you copy it note for note. Every arrow you hit plays part of the melody, so a good run sounds like a duet.
 
-![Rhythm Battle Gameplay](assets/images/gameplay-screenshot.png)
+![Rhythm Battle gameplay](assets/images/gameplay-screenshot.png)
 
 ## 🎯 Features
 
-- **Four-lane rhythm gameplay** similar to Friday Night Funkin'
-- **Arrow key controls** for intuitive gameplay
-- **Timing-based scoring system** (Perfect, Good, Okay, Miss)
-- **Combo system** that increases your score multiplier
-- **Complete audio experience** with sound effects and background music
-- **Vertical scrolling notes** that travel from bottom to top
-- **Visual feedback** for hits and misses
-- **Responsive design** that works on various screen sizes
+- **Call and response.** Watch the rival's arrows on the left, then copy them on the right. Kids learn each pattern by seeing and hearing it first.
+- **Four rivals to unlock:** Melody, Tempo, Harmony and the secret boss, Maestro J. Each has their own song, look and lines.
+- **Music that stays in time.** The band, the rival's voice and your notes all run on the Web Audio clock. Notes land on the beat, and the game plays the same on 60Hz and 120Hz screens.
+- **Three difficulties.** Easy uses slow notes on the beat only, with generous timing, and **you can't lose**. Medium adds 8th notes. Hard adds 16ths and double notes.
+- **Plays on tablets and phones.** Tap the lanes, with multi-touch for double notes. The layout adapts to portrait and landscape.
+- **Keyboard:** arrow keys or WASD. <kbd>Esc</kbd> or <kbd>P</kbd> pauses, and the game pauses itself if you switch tabs. Resuming counts down 3-2-1.
+- **Scoring:** grades from S+ to D, 1–3 stars, early/late hints, full-combo and new-best badges.
+- **Progress is saved** in the browser: your name, unlocked rivals, best scores and settings.
+- **Settings:** music and effects volume, notes falling down or rising up, screen shake on/off, and a timing offset for Bluetooth headphones.
+
+![Choose your rival](assets/images/rival-select.png)
 
 ## 🎮 How to Play
 
-1. Press the START GAME button to begin
-2. Press the corresponding arrow keys when notes reach the target zone
-3. Try to hit notes with perfect timing for maximum points
-4. Build combos to increase your score multiplier
+1. Type your name and press **Play**.
+2. Pick a rival and a difficulty, then press **Battle!**
+3. **Watch.** Your rival sings a pattern on the left.
+4. **Copy it.** Hit each arrow on the right as it reaches its outline.
+5. Push the health bar to your side (green) and survive to the end of the song to win.
 
-### Controls
-
-- ← Left Arrow: Left lane
-- ↓ Down Arrow: Left-center lane
-- ↑ Up Arrow: Right-center lane
-- → Right Arrow: Right lane
+| Lane | Keys |
+| --- | --- |
+| ← | Left arrow / A |
+| ↓ | Down arrow / S |
+| ↑ | Up arrow / W |
+| → | Right arrow / D |
 
 ## 🚀 Quick Start
 
-```bash
-# Clone the repository
-git clone https://github.com/mVara/rhythm-battle.git
+No build step and no dependencies. Open `index.html` in a browser:
 
-# Navigate to the project directory
+```bash
+git clone https://github.com/jackccrawford/rhythm-battle.git
 cd rhythm-battle
-
-# Open the game in your browser
-open index.html
+open index.html          # or double-click it
 ```
 
-Alternatively, you can serve the game using a local server:
+Or serve it locally, which is handy for playing on a tablet on the same Wi-Fi:
 
 ```bash
-# Using Python
-python -m http.server 8000
-
-# Using Node.js (with http-server)
-npx http-server
+python3 -m http.server 8000
+# then visit http://<your-computer's-ip>:8000
 ```
 
-Then open your browser and navigate to `http://localhost:8000` or `http://localhost:8080`.
+## 🛠️ How it's built
 
-## 🛠️ Technologies
+| File | What it does |
+| --- | --- |
+| `songs.js` | The rivals, their songs and note charts. Charts are short text patterns, so they're easy to edit. |
+| `audio.js` | A small synthesizer (drums, bass, chords, voices, sound effects) built on the Web Audio API. |
+| `game.js` | Game loop, timing and judging, input, drawing (canvas), menus and saving. |
+| `index.html`, `styles.css` | Menus and screens. |
 
-- **HTML5 Canvas** for rendering the game
-- **Vanilla JavaScript** for game logic
-- **CSS3** for styling
-- **Web Audio API** for sound management
+### Writing your own song
 
-## 🎵 Sound Credits
+Each rival's song in `songs.js` is a list of 8-beat phrases on a 16th-note grid, 4 characters per beat:
 
-Sound effects from Freesound.org:
-- 8-Bit Sound Effects Library by LittleRobotSoundFactory (CC BY 3.0)
-- 8bit-harmony by electrobuz (CC BY 3.0)
+```js
+'0... 1... 2..3 .... | 3... 2... 1..0 ....'
+```
 
-## 🧠 Implementation Details
-
-The game is built using a simple yet effective architecture:
-
-- **Game Loop**: Manages the update and render cycles
-- **Note System**: Controls the spawning and movement of notes
-- **Input Handler**: Processes keyboard inputs and timing
-- **Scoring System**: Calculates score based on timing accuracy
-- **Audio Manager**: Handles sound effects and background music
-
-## 🔮 Future Enhancements
-
-- Add character animations
-- Implement multiple songs and difficulty levels
-- Add custom beatmap creation
-- Improve visual effects and feedback
-- Add multiplayer functionality
+- `0` `1` `2` `3` are the ← ↓ ↑ → lanes, and `.` is a rest.
+- `a` `b` `c` `d` are two lanes at once (←→, ↓↑, ←↓, ↑→).
+- Easy keeps only the notes on the beat, Medium keeps 8th notes, and Hard keeps everything.
+- Pitches follow the song's chords automatically (lanes play root, 3rd, 5th and octave), so any pattern you write will sound musical.
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## 👤 Author
+## 👤 Credits
 
-**Jack C Crawford** - *Initial work*
+**Jack C Crawford & Evalyn**: game design, characters and play-testing.
 
-## 🙏 Acknowledgments
-
-- Inspiration from Friday Night Funkin'
-- Built with assistance from [Windsurf.ai](https://windsurf.ai)
-- Sound effects from [Freesound.org](https://freesound.org)
+Inspired by Friday Night Funkin'.
