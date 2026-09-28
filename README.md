@@ -6,6 +6,10 @@
 
 **Evalyn's Game**: a call-and-response rhythm battle inspired by Friday Night Funkin'. Your rival sings a pattern, then you copy it note for note. Every arrow you hit plays part of the melody, so a good run sounds like a duet.
 
+### ▶ [Play now: jackccrawford.github.io/rhythm-battle](https://jackccrawford.github.io/rhythm-battle/)
+
+Works on computers, tablets and phones. No install needed. On an iPad, tap Share → **Add to Home Screen** to open it like an app.
+
 ![Rhythm Battle gameplay](assets/images/gameplay-screenshot.png)
 
 ## 🎯 Features
@@ -39,7 +43,7 @@
 
 ## 🚀 Quick Start
 
-No build step and no dependencies. Open `index.html` in a browser:
+The easiest way is to [play it online](https://jackccrawford.github.io/rhythm-battle/). To run your own copy there's no build step and no dependencies. Just open `index.html` in a browser:
 
 ```bash
 git clone https://github.com/jackccrawford/rhythm-battle.git
@@ -47,7 +51,7 @@ cd rhythm-battle
 open index.html          # or double-click it
 ```
 
-Or serve it locally, which is handy for playing on a tablet on the same Wi-Fi:
+Or serve it locally, which is handy for testing changes on a tablet on the same Wi-Fi:
 
 ```bash
 python3 -m http.server 8000
